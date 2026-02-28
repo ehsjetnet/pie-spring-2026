@@ -1,0 +1,6 @@
+mainbuild.py: ./preprocessor.py \
+  ./main.py 
+	python preprocessor.py main.py --build-file=mainbuild.py
+Makefile.depends: $(filter $(shell find -name "*.py" -not -path "./.*"),./preprocessor.py \
+  ./main.py )
+	python preprocessor.py main.py --dependency-file=Makefile.depends --build-file=mainbuild.py
