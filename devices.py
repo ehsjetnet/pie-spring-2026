@@ -1,6 +1,8 @@
 import math
 import time
 
+# Courtesy of Eddy
+
 class Motor:
     """Wraps a PiE KoalaBear-controlled motor."""
     def __init__(self, robot, debug_logger, controller_id, motor):
