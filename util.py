@@ -52,3 +52,6 @@ class DebugLogger:
         """Allows a tag to be reprinted."""
         if tag in self._printed_tags:
             del self._printed_tags[tag]
+def inches_to_meters(inches):
+    """Converts inches to meters to 8 significant figures."""
+    return inches / 39.3700787

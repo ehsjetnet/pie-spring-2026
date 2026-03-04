@@ -1,4 +1,6 @@
-import devices.py
+import devices
+import constants
+import util
 
 """
 How each of these functions work:
@@ -11,6 +13,30 @@ How each of these functions work:
 7. After that, the code in teleop_main will be run at a rate of 20 times a second
 8. All code will stop running when the match eds.
 """
+
+debug_logger = util.DebugLogger(default_interval=2000)
+
+drive_wheel_left = devices.Wheel(
+    debug_logger,
+    devices.Motor(Robot, debug_logger, constants.DriveConstants.DRIVE_CONTROLLER_ID, "a")
+    .set_invert(False)
+    .set_pid(None,None,None),
+    constants.DriveConstants.DRIVE_WHEEL_RADIUS,
+    constants.DriveConstants.DRIVE_MOTOR_TICKS_PER_ROTATION * 
+    constants.DriveConstants.DRIVE_MOTOR_RATIO * 
+    constants.DriveConstants.HUB_TO_WHEEL_GEAR_RATIO
+)
+
+drive_wheel_right = devices.Wheel(
+    debug_logger,
+    devices.Motor(Robot, debug_logger, constants.DriveConstants.DRIVE_CONTROLLER_ID, "b")
+    .set_invert(True)
+    .set_pid(None,None,None),
+    constants.DriveConstants.DRIVE_WHEEL_RADIUS,
+    constants.DriveConstants.DRIVE_MOTOR_TICKS_PER_ROTATION * 
+    constants.DriveConstants.DRIVE_MOTOR_RATIO * 
+    constants.DriveConstants.HUB_TO_WHEEL_GEAR_RATIO
+)
 
 # Structural Function
 def autonomous_setup():
@@ -41,3 +67,7 @@ def teleop_main():
     rather than just pausing a specific robot action.
     """
     pass
+
+#For testing purposes
+if __name__ == "__main__":
+    teleop_main()
