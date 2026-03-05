@@ -66,7 +66,20 @@ def teleop_main():
     the entire robot will remain unresponsive for the duration of that pause 
     rather than just pausing a specific robot action.
     """
-    pass
+    two_wheel_drive()
+
+# Teleop drive
+def two_wheel_drive():
+    drive = -Gamepad.get_value("joystick_left_y")
+    turn = Gamepad.get_value("joystick_right_x")
+    left_drive_velocity = drive + turn
+    right_drive_velocity = drive - turn
+    velocity_limit = max(1.0, abs(left_drive_velocity), abs(right_drive_velocity))
+    
+    # We divide the drive velocity by the max velocity to normalize it. This ensures that the value is between
+    # 1 and -1.
+    drive_wheel_left.set_velocity(left_drive_velocity/velocity_limit)
+    drive_wheel_right.set_velocity(right_drive_velocity/velocity_limit)
 
 #For testing purposes
 if __name__ == "__main__":
