@@ -68,6 +68,37 @@ def teleop_main():
     """
     two_wheel_drive()
 
+def two_wheel_drive_keyboard():
+    drive_fwd = Keyboard.get_value("w")
+    drive_back = Keyboard.get_value("s")
+    turn_left = Keyboard.get_value("a")
+    turn_right = Keyboard.get_value("d")
+    drive = 0
+    turn = 0
+
+    # Below is theoretical, values may be reversed while testing
+    if drive_fwd:
+        drive = constants.DriveConstants.KEYBOARD_DRIVE_SPEED
+    elif drive_back:
+        drive = -constants.DriveConstants.KEYBOARD_DRIVE_SPEED
+    elif drive_fwd and drive_back:
+        print("Can't drive both forward and backwards")
+
+    # Below is theoretical, values may be reversed while testing
+    if turn_left:
+        drive = constants.DriveConstants.KEYBOARD_TURN_SPEED
+    elif turn_right:
+        drive = -constants.DriveConstants.KEYBOARD_TURN_SPEED
+    elif turn_left and turn_right:
+        print("Can't turn left and right at the same time")
+
+    left_drive_velocity = drive + turn
+    right_drive_velocity = drive - turn
+    velocity_limit = max(1.0, abs(left_drive_velocity), abs(right_drive_velocity))
+
+    drive_wheel_left.set_velocity(left_drive_velocity/velocity_limit)
+    drive_wheel_right.set_velocity(right_drive_velocity/velocity_limit)
+
 # Teleop drive
 def two_wheel_drive():
     drive = -Gamepad.get_value("joystick_left_y")
