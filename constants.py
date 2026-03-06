@@ -14,4 +14,4 @@ class DriveConstants:
     DRIVE_WHEEL_SPAN: Final[float] = 0.258 # May need to remeasure
     HUB_TO_WHEEL_GEAR_RATIO: Final[float] = 84 / 36 # gear further from motor / gear closer to motor (Remeasure)
     KEYBOARD_DRIVE_SPEED: Final[float] = 0.8 # placeholder, may change after testing
-    KEYBOARD_TURN_SPEED: Final[float] = 0.6 # placeholder, may change after testing
+    KEYBOARD_TURN_SPEED: Final[float] = 0.8 # placeholder, may change after testing
