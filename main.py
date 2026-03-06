@@ -40,32 +40,19 @@ drive_wheel_right = devices.Wheel(
 
 # Structural Function
 def autonomous_setup():
-    pass
+    print("Autonomous set up")
 
 # Structural Function
 def autonomous_main():
-    pass
+    print("Running autonomous")
 
 # Structural Function
 def teleop_setup():
-    pass
+    print("setting up teleop")
 
 # Structural Function
 def teleop_main():
-    """ 
-    Note: need to implement loop via while true. 
-    Unlike FTC, the teleop function doesn't loop on its own.
-
-    Pretty important: 
-    If you want to add a pause between a set of actions in the code.
-    You need to create a coroutine and use
-    the await keyword to delay the action for a set time while allowing
-    the rest of the code to run.
-
-    If you instead use something like sleep right in the teleop_main function, 
-    the entire robot will remain unresponsive for the duration of that pause 
-    rather than just pausing a specific robot action.
-    """
+    print("running autonomous")
     two_wheel_drive()
 
 # Teleop drive
@@ -81,6 +68,6 @@ def two_wheel_drive():
     drive_wheel_left.set_velocity(left_drive_velocity/velocity_limit)
     drive_wheel_right.set_velocity(right_drive_velocity/velocity_limit)
 
-#For testing purposes
-if __name__ == "__main__":
-    teleop_main()
+# #For testing purposes
+# if __name__ == "__main__":
+#     teleop_main()

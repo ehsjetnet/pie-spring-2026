@@ -30,16 +30,16 @@ def _HELPER_entry_point(func):
             exit(1)
     return wrapped
 def _HELPER_translate_line_no(line_no):
-    if line_no >= 456:
+    if line_no >= 459:
         skipped_lines = 0
         for entry_point_line_num in _HELPER_entry_point_line_nums:
-            if entry_point_line_num + 456 <= line_no:
+            if entry_point_line_num + 459 <= line_no:
                 skipped_lines += 1
             else:
                 break
-        return 'main', line_no - 456 - skipped_lines
-    elif line_no >= 147:
-        return 'devices.py', line_no - 147
+        return 'main', line_no - 459 - skipped_lines
+    elif line_no >= 148:
+        return 'devices.py', line_no - 148
     elif line_no >= 121:
         return 'constants.py', line_no - 121
     elif line_no >= 53:
@@ -127,11 +127,12 @@ def _HELPER_import_constants():
     
     class DriveConstants:
         # None as placeholder
-        DRIVE_CONTROLLER_ID: Final[str] = None # Need to check in Dawn
-        DRIVE_WHEEL_RADIUS: Final[float] = None # Need to measure, convert from inches to meters.
+        DRIVE_CONTROLLER_ID: Final[str] = "6_17986660329004823992" # Need to check in Dawn
+        DRIVE_WHEEL_RADIUS: Final[float] = 0.101 # Need to measure, convert from inches to meters.
         DRIVE_MOTOR_TICKS_PER_ROTATION: Final[int] = 16 # Assuming same motor probably the same
         DRIVE_MOTOR_RATIO: Final[int] = 70 # Need to verify
-        DRIVE_WHEEL_SPAN: Final[float] = 0.258 # May need to remeasure
+        DRIVE_WHEEL_SPAN: Final[float] = 0.152 # May need to remeasure
+        # original for above: 0.258 meters
         HUB_TO_WHEEL_GEAR_RATIO = 84 / 36 # gear further from motor / gear closer to motor (Remeasure)
 
     # End imported file.
@@ -447,6 +448,8 @@ def _HELPER_import_devices():
             self._robot = robot
         def set_position(self, position):
             self._robot.set_value(self._controller, "servo" + self._servo, position)
+    
+    
 
     # End imported file.
     _HELPER_module_export_dict['devices'] = locals()
@@ -495,32 +498,19 @@ drive_wheel_right = devices.Wheel(
 
 # Structural Function
 def autonomous_setup():
-    pass
+    print("Autonomous set up")
 
 # Structural Function
 def autonomous_main():
-    pass
+    print("Running autonomous")
 
 # Structural Function
 def teleop_setup():
-    pass
+    print("setting up teleop")
 
 # Structural Function
 def teleop_main():
-    """ 
-    Note: need to implement loop via while true. 
-    Unlike FTC, the teleop function doesn't loop on its own.
-
-    Pretty important: 
-    If you want to add a pause between a set of actions in the code.
-    You need to create a coroutine and use
-    the await keyword to delay the action for a set time while allowing
-    the rest of the code to run.
-
-    If you instead use something like sleep right in the teleop_main function, 
-    the entire robot will remain unresponsive for the duration of that pause 
-    rather than just pausing a specific robot action.
-    """
+    print("running autonomous")
     two_wheel_drive()
 
 # Teleop drive
@@ -536,6 +526,6 @@ def two_wheel_drive():
     drive_wheel_left.set_velocity(left_drive_velocity/velocity_limit)
     drive_wheel_right.set_velocity(right_drive_velocity/velocity_limit)
 
-#For testing purposes
-if __name__ == "__main__":
-    teleop_main()
+# #For testing purposes
+# if __name__ == "__main__":
+#     teleop_main()
