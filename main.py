@@ -96,9 +96,9 @@ def two_wheel_drive_keyboard():
 
     # Below is theoretical, values may be reversed while testing
     if turn_left:
-        drive = constants.DriveConstants.KEYBOARD_TURN_SPEED
+        turn = constants.DriveConstants.KEYBOARD_TURN_SPEED
     elif turn_right:
-        drive = -constants.DriveConstants.KEYBOARD_TURN_SPEED
+        turn = -constants.DriveConstants.KEYBOARD_TURN_SPEED
     elif turn_left and turn_right:
         print("Can't turn left and right at the same time")
 
