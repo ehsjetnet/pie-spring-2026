@@ -3,16 +3,6 @@ import constants
 import util
 
 """
-List of problems:
-Robot isn't defined when code is running.
-Network is constantly being disconnected in Dawn.
-
-Possible solution? Delete Dawn and download the new one.
-Another possible solution: Take the robot outside and try again. 
-For some reason Mr. Ward's room weakens the signal and makes everything run 10x slower.
-"""
-
-"""
 How each of these functions work:
 1. When autonomous mode starts, your entire file will be loaded.
 2. The code in autonomous_setup will then be run once
@@ -49,21 +39,18 @@ drive_wheel_right = devices.Wheel(
 )
 
 # Structural Function
-def autonomous_setup():
+def autonomous():
     print("Autonomous set up")
 
 # Structural Function
-def autonomous():
-    print("Running autonomous")
-
-# Structural Function
-def teleop_setup():
-    print("setting up teleop")
-
-# Structural Function
 def teleop():
-    print("running teleop")
-    two_wheel_drive_keyboard()
+    # Teleop setup
+    print("Teleop setup is running")
+
+    # Teleop loop
+    while True:
+        print("Teleop loop is running")
+        two_wheel_drive_keyboard()
 
 def two_wheel_drive_keyboard():
     drive_fwd = Keyboard.get_value("w")
