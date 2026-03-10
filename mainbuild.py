@@ -30,16 +30,16 @@ def _HELPER_entry_point(func):
             exit(1)
     return wrapped
 def _HELPER_translate_line_no(line_no):
-    if line_no >= 459:
+    if line_no >= 461:
         skipped_lines = 0
         for entry_point_line_num in _HELPER_entry_point_line_nums:
-            if entry_point_line_num + 459 <= line_no:
+            if entry_point_line_num + 461 <= line_no:
                 skipped_lines += 1
             else:
                 break
-        return 'main', line_no - 459 - skipped_lines
-    elif line_no >= 148:
-        return 'devices.py', line_no - 148
+        return 'main', line_no - 461 - skipped_lines
+    elif line_no >= 150:
+        return 'devices.py', line_no - 150
     elif line_no >= 121:
         return 'constants.py', line_no - 121
     elif line_no >= 53:
@@ -133,7 +133,9 @@ def _HELPER_import_constants():
         DRIVE_MOTOR_RATIO: Final[int] = 70 # Need to verify
         DRIVE_WHEEL_SPAN: Final[float] = 0.152 # May need to remeasure
         # original for above: 0.258 meters
-        HUB_TO_WHEEL_GEAR_RATIO = 84 / 36 # gear further from motor / gear closer to motor (Remeasure)
+        HUB_TO_WHEEL_GEAR_RATIO: Final[float] = 84 / 36 # gear further from motor / gear closer to motor (Remeasure)
+        KEYBOARD_DRIVE_SPEED: Final[float] = 0.8 # placeholder, may change after testing
+        KEYBOARD_TURN_SPEED: Final[float] = 0.8 # placeholder, may change after testing
 
     # End imported file.
     _HELPER_module_export_dict['constants'] = locals()
@@ -461,6 +463,16 @@ _HELPER_import_constants(); constants = _HELPER_Module('constants') # import con
 _HELPER_import_util(); util = _HELPER_Module('util') # import util
 
 """
+List of problems:
+Robot isn't defined when code is running.
+Network is constantly being disconnected in Dawn.
+
+Possible solution? Delete Dawn and download the new one.
+Another possible solution: Take the robot outside and try again. 
+For some reason Mr. Ward's room weakens the signal and makes everything run 10x slower.
+"""
+
+"""
 How each of these functions work:
 1. When autonomous mode starts, your entire file will be loaded.
 2. The code in autonomous_setup will then be run once
@@ -501,7 +513,7 @@ def autonomous_setup():
     print("Autonomous set up")
 
 # Structural Function
-def autonomous_main():
+def autonomous():
     print("Running autonomous")
 
 # Structural Function
@@ -509,9 +521,40 @@ def teleop_setup():
     print("setting up teleop")
 
 # Structural Function
-def teleop_main():
-    print("running autonomous")
-    two_wheel_drive()
+def teleop():
+    print("running teleop")
+    two_wheel_drive_keyboard()
+
+def two_wheel_drive_keyboard():
+    drive_fwd = Keyboard.get_value("w")
+    drive_back = Keyboard.get_value("s")
+    turn_left = Keyboard.get_value("a")
+    turn_right = Keyboard.get_value("d")
+    drive = 0
+    turn = 0
+
+    # Below is theoretical, values may be reversed while testing
+    if drive_fwd:
+        drive = constants.DriveConstants.KEYBOARD_DRIVE_SPEED
+    elif drive_back:
+        drive = -constants.DriveConstants.KEYBOARD_DRIVE_SPEED
+    elif drive_fwd and drive_back:
+        print("Can't drive both forward and backwards")
+
+    # Below is theoretical, values may be reversed while testing
+    if turn_left:
+        turn = constants.DriveConstants.KEYBOARD_TURN_SPEED
+    elif turn_right:
+        turn = -constants.DriveConstants.KEYBOARD_TURN_SPEED
+    elif turn_left and turn_right:
+        print("Can't turn left and right at the same time")
+
+    left_drive_velocity = drive + turn
+    right_drive_velocity = drive - turn
+    velocity_limit = max(1.0, abs(left_drive_velocity), abs(right_drive_velocity))
+
+    drive_wheel_left.set_velocity(left_drive_velocity/velocity_limit)
+    drive_wheel_right.set_velocity(right_drive_velocity/velocity_limit)
 
 # Teleop drive
 def two_wheel_drive():
@@ -529,3 +572,4 @@ def two_wheel_drive():
 # #For testing purposes
 # if __name__ == "__main__":
 #     teleop_main()
+

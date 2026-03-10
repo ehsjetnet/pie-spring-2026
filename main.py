@@ -53,7 +53,7 @@ def autonomous_setup():
     print("Autonomous set up")
 
 # Structural Function
-def autonomous_main():
+def autonomous():
     print("Running autonomous")
 
 # Structural Function
@@ -61,9 +61,9 @@ def teleop_setup():
     print("setting up teleop")
 
 # Structural Function
-def teleop_main():
-    print("running autonomous")
-    two_wheel_drive()
+def teleop():
+    print("running teleop")
+    two_wheel_drive_keyboard()
 
 def two_wheel_drive_keyboard():
     drive_fwd = Keyboard.get_value("w")
