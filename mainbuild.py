@@ -30,18 +30,18 @@ def _HELPER_entry_point(func):
             exit(1)
     return wrapped
 def _HELPER_translate_line_no(line_no):
-    if line_no >= 461:
+    if line_no >= 410:
         skipped_lines = 0
         for entry_point_line_num in _HELPER_entry_point_line_nums:
-            if entry_point_line_num + 461 <= line_no:
+            if entry_point_line_num + 410 <= line_no:
                 skipped_lines += 1
             else:
                 break
-        return 'main', line_no - 461 - skipped_lines
-    elif line_no >= 150:
-        return 'devices.py', line_no - 150
-    elif line_no >= 121:
-        return 'constants.py', line_no - 121
+        return 'main', line_no - 410 - skipped_lines
+    elif line_no >= 104:
+        return 'devices.py', line_no - 104
+    elif line_no >= 72:
+        return 'constants.py', line_no - 72
     elif line_no >= 53:
         return 'util.py', line_no - 53
 def _HELPER_import_util():
@@ -54,56 +54,7 @@ def _HELPER_import_util():
     
     # Courtesy of Eddy
     
-    class DebugLogger:
-        """A debugging utility that can periodically print messages. Since it's passed around
-        everywhere, it's also a good place to put telemetry."""
-        _sample_duration = 5 # seconds
-        def __init__(self, default_interval):
-            self._default_interval = default_interval
-            self._tick = 0
-            self._printed_tags = {}
-            self._time_samples = []
-            self._init_time = time.time()
-        def tick(self):
-            """Advances the internal counter."""
-            self._tick += 1
-            timestamp = time.time()
-            self._time_samples.append(timestamp)
-            del_idx = 0
-            for sample in self._time_samples:
-                if sample >= (timestamp - self._sample_duration):
-                    break
-                del_idx += 1
-            if del_idx:
-                del self._time_samples[:del_idx - 1]
-        def get_ticks_per_second(self):
-            """Gets the measured number of ticks per second, or 0 if insufficiently many ticks have been
-            counted."""
-            return (len(self._time_samples) if self._init_time + self._sample_duration < time.time()
-                else 0) / self._sample_duration
-        def lazy_print(self, func, interval=None):
-            """Prints the result of calling the given function every {interval} of the internal
-            counter."""
-            if interval == None:
-                interval = self._default_interval
-            if (self._tick % interval) == 0:
-                print(func())
-        def print(self, msg, interval=None):
-            """Prints a message every {interval} of the internal counter."""
-            self.lazy_print(lambda: msg, interval)
-        def lazy_print_once(self, tag, func):
-            """Prints the result of calling the given function if the given tag has not been printed to
-            yet."""
-            if not (tag in self._printed_tags):
-                self._printed_tags[tag] = True
-                print(func())
-        def print_once(self, tag, msg):
-            """Prints a message if the given tag has not been printed to yet."""
-            self.lazy_print_once(tag, lambda: msg)
-        def reset_print_tag(self, tag):
-            """Allows a tag to be reprinted."""
-            if tag in self._printed_tags:
-                del self._printed_tags[tag]
+    
     def inches_to_meters(inches):
         """Converts inches to meters to 8 significant figures."""
         return inches / 39.3700787
@@ -136,6 +87,9 @@ def _HELPER_import_constants():
         HUB_TO_WHEEL_GEAR_RATIO: Final[float] = 84 / 36 # gear further from motor / gear closer to motor (Remeasure)
         KEYBOARD_DRIVE_SPEED: Final[float] = 0.8 # placeholder, may change after testing
         KEYBOARD_TURN_SPEED: Final[float] = 0.8 # placeholder, may change after testing
+    
+    class ArmConstants:
+        ARM_CONTROLLER_ID: Final[str] = "6_10978819230753236066"
 
     # End imported file.
     _HELPER_module_export_dict['constants'] = locals()
@@ -154,11 +108,10 @@ def _HELPER_import_devices():
     
     class Motor:
         """Wraps a PiE KoalaBear-controlled motor."""
-        def __init__(self, robot, debug_logger, controller_id, motor):
+        def __init__(self, robot, controller_id, motor):
             self._controller = controller_id
             self._motor = motor
             self._robot = robot
-            self._debug_logger = debug_logger
             self._is_inverted = False
         def set_invert(self, invert):
             self._set("invert", invert)
@@ -195,8 +148,8 @@ def _HELPER_import_devices():
     
     class PidMotor(Motor):
         """Adds custom PID control to a Motor since PiE's implementation is weird."""
-        def __init__(self, robot, debug_logger, controller_id, motor):
-            super().__init__(robot, debug_logger, controller_id, motor)
+        def __init__(self, robot, controller_id, motor):
+            super().__init__(robot, controller_id, motor)
             super().set_pid(None, None, None)
             self._clear_samples()
             self._max_samples = 200
@@ -251,10 +204,10 @@ def _HELPER_import_devices():
         
     class MotorPair(Motor):
         """Drives a pair of Motors together as if they were one."""
-        def __init__(self, robot, debug_logger, controller_id, motor_suffix,
+        def __init__(self, robot,  controller_id, motor_suffix,
                 paired_controller_id, paired_motor_suffix, paired_motor_inverted):
-            super().__init__(robot, debug_logger, controller_id, motor_suffix)
-            self._paired_motor = Motor(robot, debug_logger, paired_controller_id,
+            super().__init__(robot,  controller_id, motor_suffix)
+            self._paired_motor = Motor(robot,  paired_controller_id,
                 paired_motor_suffix).set_invert(paired_motor_inverted)
             self._inverted = False
         def set_invert(self, invert):
@@ -279,11 +232,10 @@ def _HELPER_import_devices():
     class Wheel:
         """Encapsulates a Motor attached to a wheel that can calculate distance travelled given the
         motor's ticks per rotation and the wheel's radius."""
-        def __init__(self, debug_logger, motor, radius, ticks_per_rotation):
+        def __init__(self,  motor, radius, ticks_per_rotation):
             self._motor = motor
             self._radius = radius
             self._ticks_per_rot = ticks_per_rotation
-            self._debug_logger = debug_logger
         def get_angle(self, ticks_per_rot):
             return 
         def get_distance(self):
@@ -299,13 +251,12 @@ def _HELPER_import_devices():
         """Encapsulates a Motor attached to an arm that can calculate the height of the arm's end
         relative to the motor and detect out-of-bounds movement given the motor's ticks per rotation,
         the arm's length, and the maximum angle."""
-        def __init__(self, debug_logger, motor, length, ticks_per_rotation, max_height,
+        def __init__(self,  motor, length, ticks_per_rotation, max_height,
                 hold_on_zero_velocity=False):
             # motor must be configured so positive velocity moves upwards
             self._motor = motor
             self._length = length
             self._ticks_per_rot = ticks_per_rotation
-            self._debug_logger = debug_logger
             self._max_height = max_height
             if max_height > 2 * length:
                 raise ValueError("max_height is out of range.")
@@ -348,10 +299,9 @@ def _HELPER_import_devices():
         and hand length, optionally stopping when encountering resistance."""
         _MAX_HISTORY_LENGTH = 40000
         _STRUGGLE_THRESHOLD = 0.02 # meters. hand must move this far in struggle_duration seconds.
-        def __init__(self, debug_logger, motor, ticks_per_rotation, max_width, hand_offset, hand_length,
+        def __init__(self, motor, ticks_per_rotation, max_width, hand_offset, hand_length,
                 struggle_duration, start_open):
             # disable struggle checking if struggle_duration == 0
-            self._debug_logger = debug_logger
             self._motor = motor
             self._ticks_per_rot = ticks_per_rotation
             self._hand_offset = hand_offset
@@ -390,7 +340,6 @@ def _HELPER_import_devices():
                 # don't check if struggle duration is 0
                 if self._struggle_duration:
                     lookbehind = self._get_hist_lookbehind()
-                    self._debug_logger.print(f"lookbehind: {lookbehind}")
                     struggling = (bool(lookbehind) and abs(lookbehind - self._get_width())
                         < self._STRUGGLE_THRESHOLD)
                 else:
@@ -463,16 +412,6 @@ _HELPER_import_constants(); constants = _HELPER_Module('constants') # import con
 _HELPER_import_util(); util = _HELPER_Module('util') # import util
 
 """
-List of problems:
-Robot isn't defined when code is running.
-Network is constantly being disconnected in Dawn.
-
-Possible solution? Delete Dawn and download the new one.
-Another possible solution: Take the robot outside and try again. 
-For some reason Mr. Ward's room weakens the signal and makes everything run 10x slower.
-"""
-
-"""
 How each of these functions work:
 1. When autonomous mode starts, your entire file will be loaded.
 2. The code in autonomous_setup will then be run once
@@ -483,69 +422,66 @@ How each of these functions work:
 7. After that, the code in teleop_main will be run at a rate of 20 times a second
 8. All code will stop running when the match eds.
 """
+robot = None
+keyboard = None
 
-debug_logger = util.DebugLogger(default_interval=2000)
+def initialize():
+    global robot, drive_wheel_left, drive_wheel_right, base_arm_motor, keyboard
+    robot = Robot
+    keyboard = Keyboard
+    drive_wheel_right = devices.Wheel(   
+        devices.Motor(robot, constants.DriveConstants.DRIVE_CONTROLLER_ID, "a")
+        .set_invert(True)
+        .set_pid(None,None,None),
+        constants.DriveConstants.DRIVE_WHEEL_RADIUS,
+        constants.DriveConstants.DRIVE_MOTOR_TICKS_PER_ROTATION * 
+        constants.DriveConstants.DRIVE_MOTOR_RATIO * 
+        constants.DriveConstants.HUB_TO_WHEEL_GEAR_RATIO
+    )
 
-drive_wheel_left = devices.Wheel(
-    debug_logger,
-    devices.Motor(Robot, debug_logger, constants.DriveConstants.DRIVE_CONTROLLER_ID, "a")
-    .set_invert(False)
-    .set_pid(None,None,None),
-    constants.DriveConstants.DRIVE_WHEEL_RADIUS,
-    constants.DriveConstants.DRIVE_MOTOR_TICKS_PER_ROTATION * 
-    constants.DriveConstants.DRIVE_MOTOR_RATIO * 
-    constants.DriveConstants.HUB_TO_WHEEL_GEAR_RATIO
-)
+    drive_wheel_left = devices.Wheel(
+        devices.Motor(robot, constants.DriveConstants.DRIVE_CONTROLLER_ID, "b")
+        .set_invert(True)
+        .set_pid(None,None,None),
+        constants.DriveConstants.DRIVE_WHEEL_RADIUS,
+        constants.DriveConstants.DRIVE_MOTOR_TICKS_PER_ROTATION * 
+        constants.DriveConstants.DRIVE_MOTOR_RATIO * 
+        constants.DriveConstants.HUB_TO_WHEEL_GEAR_RATIO
+    )
 
-drive_wheel_right = devices.Wheel(
-    debug_logger,
-    devices.Motor(Robot, debug_logger, constants.DriveConstants.DRIVE_CONTROLLER_ID, "b")
-    .set_invert(True)
-    .set_pid(None,None,None),
-    constants.DriveConstants.DRIVE_WHEEL_RADIUS,
-    constants.DriveConstants.DRIVE_MOTOR_TICKS_PER_ROTATION * 
-    constants.DriveConstants.DRIVE_MOTOR_RATIO * 
-    constants.DriveConstants.HUB_TO_WHEEL_GEAR_RATIO
-)
-
-# Structural Function
-def autonomous_setup():
-    print("Autonomous set up")
+    base_arm_motor = devices.Motor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "b").set_invert(True)
 
 # Structural Function
 def autonomous():
-    print("Running autonomous")
+    initialize()
+    print("Autonomous set up")
+    while(True):
+        base_arm_motor.set_velocity(0.6)
+        # drive_wheel_left.set_velocity(0.2)
+        # drive_wheel_right.set_velocity(0.2)
 
-# Structural Function
-def teleop_setup():
-    print("setting up teleop")
 
-# Structural Function
-def teleop():
-    print("running teleop")
-    two_wheel_drive_keyboard()
-
-def two_wheel_drive_keyboard():
-    drive_fwd = Keyboard.get_value("w")
-    drive_back = Keyboard.get_value("s")
-    turn_left = Keyboard.get_value("a")
-    turn_right = Keyboard.get_value("d")
+def two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right):
     drive = 0
     turn = 0
 
     # Below is theoretical, values may be reversed while testing
     if drive_fwd:
         drive = constants.DriveConstants.KEYBOARD_DRIVE_SPEED
+        print("drive_fwd")
     elif drive_back:
         drive = -constants.DriveConstants.KEYBOARD_DRIVE_SPEED
+        print("drive_back")
     elif drive_fwd and drive_back:
         print("Can't drive both forward and backwards")
 
     # Below is theoretical, values may be reversed while testing
     if turn_left:
         turn = constants.DriveConstants.KEYBOARD_TURN_SPEED
+        print("turn_left")
     elif turn_right:
         turn = -constants.DriveConstants.KEYBOARD_TURN_SPEED
+        print("turn_right")
     elif turn_left and turn_right:
         print("Can't turn left and right at the same time")
 
@@ -568,6 +504,20 @@ def two_wheel_drive():
     # 1 and -1.
     drive_wheel_left.set_velocity(left_drive_velocity/velocity_limit)
     drive_wheel_right.set_velocity(right_drive_velocity/velocity_limit)
+
+# Structural Function
+def teleop():
+    # Teleop setup
+    print("Teleop setup is running")
+    initialize()
+    # Teleop loop
+    while True:
+        drive_fwd = Keyboard.get_value("up_arrow")
+        drive_back = Keyboard.get_value("down_arrow")
+        turn_left = Keyboard.get_value("left_arrow")
+        turn_right = Keyboard.get_value("right_arrow")
+        two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right)
+        
 
 # #For testing purposes
 # if __name__ == "__main__":

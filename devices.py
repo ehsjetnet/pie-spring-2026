@@ -5,11 +5,10 @@ import time
 
 class Motor:
     """Wraps a PiE KoalaBear-controlled motor."""
-    def __init__(self, robot, debug_logger, controller_id, motor):
+    def __init__(self, robot, controller_id, motor):
         self._controller = controller_id
         self._motor = motor
         self._robot = robot
-        self._debug_logger = debug_logger
         self._is_inverted = False
     def set_invert(self, invert):
         self._set("invert", invert)
@@ -46,8 +45,8 @@ class Motor:
 
 class PidMotor(Motor):
     """Adds custom PID control to a Motor since PiE's implementation is weird."""
-    def __init__(self, robot, debug_logger, controller_id, motor):
-        super().__init__(robot, debug_logger, controller_id, motor)
+    def __init__(self, robot, controller_id, motor):
+        super().__init__(robot, controller_id, motor)
         super().set_pid(None, None, None)
         self._clear_samples()
         self._max_samples = 200
@@ -102,10 +101,10 @@ class PidMotor(Motor):
     
 class MotorPair(Motor):
     """Drives a pair of Motors together as if they were one."""
-    def __init__(self, robot, debug_logger, controller_id, motor_suffix,
+    def __init__(self, robot,  controller_id, motor_suffix,
             paired_controller_id, paired_motor_suffix, paired_motor_inverted):
-        super().__init__(robot, debug_logger, controller_id, motor_suffix)
-        self._paired_motor = Motor(robot, debug_logger, paired_controller_id,
+        super().__init__(robot,  controller_id, motor_suffix)
+        self._paired_motor = Motor(robot,  paired_controller_id,
             paired_motor_suffix).set_invert(paired_motor_inverted)
         self._inverted = False
     def set_invert(self, invert):
@@ -130,11 +129,10 @@ class MotorPair(Motor):
 class Wheel:
     """Encapsulates a Motor attached to a wheel that can calculate distance travelled given the
     motor's ticks per rotation and the wheel's radius."""
-    def __init__(self, debug_logger, motor, radius, ticks_per_rotation):
+    def __init__(self,  motor, radius, ticks_per_rotation):
         self._motor = motor
         self._radius = radius
         self._ticks_per_rot = ticks_per_rotation
-        self._debug_logger = debug_logger
     def get_angle(self, ticks_per_rot):
         return 
     def get_distance(self):
@@ -150,13 +148,12 @@ class Arm:
     """Encapsulates a Motor attached to an arm that can calculate the height of the arm's end
     relative to the motor and detect out-of-bounds movement given the motor's ticks per rotation,
     the arm's length, and the maximum angle."""
-    def __init__(self, debug_logger, motor, length, ticks_per_rotation, max_height,
+    def __init__(self,  motor, length, ticks_per_rotation, max_height,
             hold_on_zero_velocity=False):
         # motor must be configured so positive velocity moves upwards
         self._motor = motor
         self._length = length
         self._ticks_per_rot = ticks_per_rotation
-        self._debug_logger = debug_logger
         self._max_height = max_height
         if max_height > 2 * length:
             raise ValueError("max_height is out of range.")
@@ -199,10 +196,9 @@ class Hand:
     and hand length, optionally stopping when encountering resistance."""
     _MAX_HISTORY_LENGTH = 40000
     _STRUGGLE_THRESHOLD = 0.02 # meters. hand must move this far in struggle_duration seconds.
-    def __init__(self, debug_logger, motor, ticks_per_rotation, max_width, hand_offset, hand_length,
+    def __init__(self, motor, ticks_per_rotation, max_width, hand_offset, hand_length,
             struggle_duration, start_open):
         # disable struggle checking if struggle_duration == 0
-        self._debug_logger = debug_logger
         self._motor = motor
         self._ticks_per_rot = ticks_per_rotation
         self._hand_offset = hand_offset
@@ -241,7 +237,6 @@ class Hand:
             # don't check if struggle duration is 0
             if self._struggle_duration:
                 lookbehind = self._get_hist_lookbehind()
-                self._debug_logger.print(f"lookbehind: {lookbehind}")
                 struggling = (bool(lookbehind) and abs(lookbehind - self._get_width())
                     < self._STRUGGLE_THRESHOLD)
             else:

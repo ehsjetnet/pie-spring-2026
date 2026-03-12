@@ -13,66 +13,66 @@ How each of these functions work:
 7. After that, the code in teleop_main will be run at a rate of 20 times a second
 8. All code will stop running when the match eds.
 """
+robot = None
+keyboard = None
 
-debug_logger = util.DebugLogger(default_interval=2000)
+def initialize():
+    global robot, drive_wheel_left, drive_wheel_right, base_arm_motor, keyboard
+    robot = Robot
+    keyboard = Keyboard
+    drive_wheel_right = devices.Wheel(   
+        devices.Motor(robot, constants.DriveConstants.DRIVE_CONTROLLER_ID, "a")
+        .set_invert(True)
+        .set_pid(None,None,None),
+        constants.DriveConstants.DRIVE_WHEEL_RADIUS,
+        constants.DriveConstants.DRIVE_MOTOR_TICKS_PER_ROTATION * 
+        constants.DriveConstants.DRIVE_MOTOR_RATIO * 
+        constants.DriveConstants.HUB_TO_WHEEL_GEAR_RATIO
+    )
 
-drive_wheel_left = devices.Wheel(
-    debug_logger,
-    devices.Motor(Robot, debug_logger, constants.DriveConstants.DRIVE_CONTROLLER_ID, "a")
-    .set_invert(False)
-    .set_pid(None,None,None),
-    constants.DriveConstants.DRIVE_WHEEL_RADIUS,
-    constants.DriveConstants.DRIVE_MOTOR_TICKS_PER_ROTATION * 
-    constants.DriveConstants.DRIVE_MOTOR_RATIO * 
-    constants.DriveConstants.HUB_TO_WHEEL_GEAR_RATIO
-)
+    drive_wheel_left = devices.Wheel(
+        devices.Motor(robot, constants.DriveConstants.DRIVE_CONTROLLER_ID, "b")
+        .set_invert(True)
+        .set_pid(None,None,None),
+        constants.DriveConstants.DRIVE_WHEEL_RADIUS,
+        constants.DriveConstants.DRIVE_MOTOR_TICKS_PER_ROTATION * 
+        constants.DriveConstants.DRIVE_MOTOR_RATIO * 
+        constants.DriveConstants.HUB_TO_WHEEL_GEAR_RATIO
+    )
 
-drive_wheel_right = devices.Wheel(
-    debug_logger,
-    devices.Motor(Robot, debug_logger, constants.DriveConstants.DRIVE_CONTROLLER_ID, "b")
-    .set_invert(True)
-    .set_pid(None,None,None),
-    constants.DriveConstants.DRIVE_WHEEL_RADIUS,
-    constants.DriveConstants.DRIVE_MOTOR_TICKS_PER_ROTATION * 
-    constants.DriveConstants.DRIVE_MOTOR_RATIO * 
-    constants.DriveConstants.HUB_TO_WHEEL_GEAR_RATIO
-)
+    base_arm_motor = devices.Motor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "b").set_invert(True)
 
 # Structural Function
 def autonomous():
+    initialize()
     print("Autonomous set up")
+    while(True):
+        base_arm_motor.set_velocity(0.6)
+        # drive_wheel_left.set_velocity(0.2)
+        # drive_wheel_right.set_velocity(0.2)
 
-# Structural Function
-def teleop():
-    # Teleop setup
-    print("Teleop setup is running")
 
-    # Teleop loop
-    while True:
-        print("Teleop loop is running")
-        two_wheel_drive_keyboard()
-
-def two_wheel_drive_keyboard():
-    drive_fwd = Keyboard.get_value("w")
-    drive_back = Keyboard.get_value("s")
-    turn_left = Keyboard.get_value("a")
-    turn_right = Keyboard.get_value("d")
+def two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right):
     drive = 0
     turn = 0
 
     # Below is theoretical, values may be reversed while testing
     if drive_fwd:
         drive = constants.DriveConstants.KEYBOARD_DRIVE_SPEED
+        print("drive_fwd")
     elif drive_back:
         drive = -constants.DriveConstants.KEYBOARD_DRIVE_SPEED
+        print("drive_back")
     elif drive_fwd and drive_back:
         print("Can't drive both forward and backwards")
 
     # Below is theoretical, values may be reversed while testing
     if turn_left:
         turn = constants.DriveConstants.KEYBOARD_TURN_SPEED
+        print("turn_left")
     elif turn_right:
         turn = -constants.DriveConstants.KEYBOARD_TURN_SPEED
+        print("turn_right")
     elif turn_left and turn_right:
         print("Can't turn left and right at the same time")
 
@@ -95,6 +95,20 @@ def two_wheel_drive():
     # 1 and -1.
     drive_wheel_left.set_velocity(left_drive_velocity/velocity_limit)
     drive_wheel_right.set_velocity(right_drive_velocity/velocity_limit)
+
+# Structural Function
+def teleop():
+    # Teleop setup
+    print("Teleop setup is running")
+    initialize()
+    # Teleop loop
+    while True:
+        drive_fwd = Keyboard.get_value("up_arrow")
+        drive_back = Keyboard.get_value("down_arrow")
+        turn_left = Keyboard.get_value("left_arrow")
+        turn_right = Keyboard.get_value("right_arrow")
+        two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right)
+        
 
 # #For testing purposes
 # if __name__ == "__main__":
