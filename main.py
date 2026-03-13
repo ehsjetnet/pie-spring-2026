@@ -103,13 +103,17 @@ def teleop():
     initialize()
     # Teleop loop
     while True:
-        drive_fwd = Keyboard.get_value("up_arrow")
-        drive_back = Keyboard.get_value("down_arrow")
-        turn_left = Keyboard.get_value("left_arrow")
-        turn_right = Keyboard.get_value("right_arrow")
-        two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right)
+        # drive_fwd = Keyboard.get_value("up_arrow")
+        # drive_back = Keyboard.get_value("down_arrow")
+        # turn_left = Keyboard.get_value("left_arrow")
+        # turn_right = Keyboard.get_value("right_arrow")
+        # two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right)
+        two_wheel_drive()
         
 
 # #For testing purposes
 # if __name__ == "__main__":
 #     teleop_main()
+
+async def slowprint(value):
+    print(value)
