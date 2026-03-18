@@ -1,6 +1,7 @@
 import devices
 import constants
 import util
+import time
 
 """
 How each of these functions work:
@@ -15,9 +16,11 @@ How each of these functions work:
 """
 robot = None
 keyboard = None
+actions = None
 
 def initialize():
-    global robot, drive_wheel_left, drive_wheel_right, base_arm_motor, keyboard
+    global robot, drive_wheel_left, drive_wheel_right, base_arm_motor, keyboard, actions
+    actions = Actions
     robot = Robot
     keyboard = Keyboard
     drive_wheel_right = devices.Wheel(   
@@ -96,6 +99,20 @@ def two_wheel_drive():
     drive_wheel_left.set_velocity(left_drive_velocity/velocity_limit)
     drive_wheel_right.set_velocity(right_drive_velocity/velocity_limit)
 
+def arm_testing():
+    move_up = Gamepad.get_value("button_y")
+    move_down = Gamepad.get_value("button_a")
+    if move_up:
+        base_arm_motor.set_velocity(0.6)
+        slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
+    elif move_down:
+        base_arm_motor.set_velocity(-0.6)
+        slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
+    else:
+        base_arm_motor.reset_encoder()
+        slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
+
+
 # Structural Function
 def teleop():
     # Teleop setup
@@ -109,6 +126,7 @@ def teleop():
         # turn_right = Keyboard.get_value("right_arrow")
         # two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right)
         two_wheel_drive()
+        arm_testing()
         
 
 # #For testing purposes
@@ -117,3 +135,4 @@ def teleop():
 
 async def slowprint(value):
     print(value)
+    actions.sleep(2.0)
