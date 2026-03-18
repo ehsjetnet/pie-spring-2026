@@ -19,8 +19,8 @@ keyboard = None
 actions = None
 
 def initialize():
-    global robot, drive_wheel_left, drive_wheel_right, base_arm_motor, keyboard, actions
-    actions = Actions
+    global robot, drive_wheel_left, drive_wheel_right, base_arm_motor, keyboard
+    # actions = Actions
     robot = Robot
     keyboard = Keyboard
     drive_wheel_right = devices.Wheel(   
@@ -103,14 +103,15 @@ def arm_testing():
     move_up = Gamepad.get_value("button_y")
     move_down = Gamepad.get_value("button_a")
     if move_up:
-        base_arm_motor.set_velocity(0.6)
-        slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
+        base_arm_motor.set_velocity(0.65)
+        # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
     elif move_down:
-        base_arm_motor.set_velocity(-0.6)
-        slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
+        base_arm_motor.set_velocity(-0.25)
+        # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
     else:
+        base_arm_motor.set_velocity(0)
         base_arm_motor.reset_encoder()
-        slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
+        # slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
 
 
 # Structural Function
@@ -135,4 +136,4 @@ def teleop():
 
 async def slowprint(value):
     print(value)
-    actions.sleep(2.0)
+    # actions.sleep(2.0)

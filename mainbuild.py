@@ -410,6 +410,7 @@ def _HELPER_import_devices():
 _HELPER_import_devices(); devices = _HELPER_Module('devices') # import devices
 _HELPER_import_constants(); constants = _HELPER_Module('constants') # import constants
 _HELPER_import_util(); util = _HELPER_Module('util') # import util
+import time
 
 """
 How each of these functions work:
@@ -424,9 +425,11 @@ How each of these functions work:
 """
 robot = None
 keyboard = None
+actions = None
 
 def initialize():
     global robot, drive_wheel_left, drive_wheel_right, base_arm_motor, keyboard
+    # actions = Actions
     robot = Robot
     keyboard = Keyboard
     drive_wheel_right = devices.Wheel(   
@@ -505,6 +508,21 @@ def two_wheel_drive():
     drive_wheel_left.set_velocity(left_drive_velocity/velocity_limit)
     drive_wheel_right.set_velocity(right_drive_velocity/velocity_limit)
 
+def arm_testing():
+    move_up = Gamepad.get_value("button_y")
+    move_down = Gamepad.get_value("button_a")
+    if move_up:
+        base_arm_motor.set_velocity(0.65)
+        # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
+    elif move_down:
+        base_arm_motor.set_velocity(-0.25)
+        # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
+    else:
+        base_arm_motor.set_velocity(0)
+        base_arm_motor.reset_encoder()
+        # slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
+
+
 # Structural Function
 def teleop():
     # Teleop setup
@@ -518,9 +536,14 @@ def teleop():
         # turn_right = Keyboard.get_value("right_arrow")
         # two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right)
         two_wheel_drive()
+        arm_testing()
         
 
 # #For testing purposes
 # if __name__ == "__main__":
 #     teleop_main()
+
+async def slowprint(value):
+    print(value)
+    # actions.sleep(2.0)
 
