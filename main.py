@@ -1,5 +1,6 @@
 import devices
 import constants
+import math
 import util
 import time
 
@@ -19,7 +20,7 @@ keyboard = None
 actions = None
 
 def initialize():
-    global robot, drive_wheel_left, drive_wheel_right, base_arm_motor, keyboard
+    global robot, drive_wheel_left, drive_wheel_right, arm_base, keyboard, base_arm_motor
     # actions = Actions
     robot = Robot
     keyboard = Keyboard
@@ -45,12 +46,21 @@ def initialize():
 
     base_arm_motor = devices.Motor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "b").set_invert(True)
 
+    arm_base = devices.Arm(
+        devices.PidMotor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "b")
+        .set_invert(False)
+        .set_pid(0.08, 0, 0),
+        constants.ArmConstants.ARM_LENGTH,
+        constants.ArmConstants.ARM_MOTOR_TPR * constants.ArmConstants.ARM_MOTOR_RATIO * constants.ArmConstants.HUB_TO_ARM_GEAR_RATIO,
+        0
+    )
+
 # Structural Function
 def autonomous():
     initialize()
     print("Autonomous set up")
     while(True):
-        base_arm_motor.set_velocity(0.6)
+        base_arm_motor.set_velocity(0.65)
         # drive_wheel_left.set_velocity(0.2)
         # drive_wheel_right.set_velocity(0.2)
 
@@ -90,8 +100,12 @@ def two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right):
 def two_wheel_drive():
     drive = -Gamepad.get_value("joystick_left_y")
     turn = Gamepad.get_value("joystick_right_x")
-    left_drive_velocity = drive + turn
-    right_drive_velocity = drive - turn
+    left_drive_velocity = turn + drive
+    right_drive_velocity = turn - drive
+    # turn = -Gamepad.get_value("joystick_left_y")
+    # drive = Gamepad.get_value("joystick_right_x")
+    # left_drive_velocity = drive + turn
+    # right_drive_velocity = drive - turn
     velocity_limit = max(1.0, abs(left_drive_velocity), abs(right_drive_velocity))
     
     # We divide the drive velocity by the max velocity to normalize it. This ensures that the value is between
@@ -103,7 +117,7 @@ def arm_testing():
     move_up = Gamepad.get_value("button_y")
     move_down = Gamepad.get_value("button_a")
     if move_up:
-        base_arm_motor.set_velocity(0.65)
+        base_arm_motor.set_velocity(0.60)
         # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
     elif move_down:
         base_arm_motor.set_velocity(-0.25)
@@ -113,6 +127,16 @@ def arm_testing():
         base_arm_motor.reset_encoder()
         # slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
 
+def arm_pid_testing():
+    move_up = Gamepad.get_value("button_y")
+    move_down = Gamepad.get_value("button_a")
+    if move_up:
+        arm_base.set_velocity(0.40)
+        # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
+    elif move_down:
+        arm_base.set_velocity(-0.25)
+        # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
+        # slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
 
 # Structural Function
 def teleop():
@@ -127,7 +151,7 @@ def teleop():
         # turn_right = Keyboard.get_value("right_arrow")
         # two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right)
         two_wheel_drive()
-        arm_testing()
+        arm_pid_testing()
         
 
 # #For testing purposes

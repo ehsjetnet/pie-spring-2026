@@ -30,39 +30,20 @@ def _HELPER_entry_point(func):
             exit(1)
     return wrapped
 def _HELPER_translate_line_no(line_no):
-    if line_no >= 410:
+    if line_no >= 416:
         skipped_lines = 0
         for entry_point_line_num in _HELPER_entry_point_line_nums:
-            if entry_point_line_num + 410 <= line_no:
+            if entry_point_line_num + 416 <= line_no:
                 skipped_lines += 1
             else:
                 break
-        return 'main', line_no - 410 - skipped_lines
-    elif line_no >= 104:
-        return 'devices.py', line_no - 104
-    elif line_no >= 72:
-        return 'constants.py', line_no - 72
+        return 'main', line_no - 416 - skipped_lines
+    elif line_no >= 402:
+        return 'util.py', line_no - 402
+    elif line_no >= 91:
+        return 'devices.py', line_no - 91
     elif line_no >= 53:
-        return 'util.py', line_no - 53
-def _HELPER_import_util():
-    if 'util' in _HELPER_module_export_dict:
-        return
-    __name__ = 'util'
-
-    # Begin imported file.
-    import time
-    
-    # Courtesy of Eddy
-    
-    
-    def inches_to_meters(inches):
-        """Converts inches to meters to 8 significant figures."""
-        return inches / 39.3700787
-
-    # End imported file.
-    _HELPER_module_export_dict['util'] = locals()
-
-
+        return 'constants.py', line_no - 53
 def _HELPER_import_constants():
     if 'constants' in _HELPER_module_export_dict:
         return
@@ -70,6 +51,7 @@ def _HELPER_import_constants():
 
     # Begin imported file.
     from typing import Final
+    _HELPER_import_util(); util = _HELPER_Module('util') # import util
     
     """
     Constants file containing information such as motor controller IDs,
@@ -90,6 +72,11 @@ def _HELPER_import_constants():
     
     class ArmConstants:
         ARM_CONTROLLER_ID: Final[str] = "6_10978819230753236066"
+        ARM_LENGTH: int = util.inches_to_meters(14)
+        ARM_MOTOR_TPR: int = 16
+        ARM_MOTOR_RATIO: int = 50
+        HUB_TO_ARM_GEAR_RATIO: int = 84/36
+    
 
     # End imported file.
     _HELPER_module_export_dict['constants'] = locals()
@@ -406,9 +393,29 @@ def _HELPER_import_devices():
     _HELPER_module_export_dict['devices'] = locals()
 
 
+def _HELPER_import_util():
+    if 'util' in _HELPER_module_export_dict:
+        return
+    __name__ = 'util'
+
+    # Begin imported file.
+    import time
+    
+    # Courtesy of Eddy
+    
+    
+    def inches_to_meters(inches):
+        """Converts inches to meters to 8 significant figures."""
+        return inches / 39.3700787
+
+    # End imported file.
+    _HELPER_module_export_dict['util'] = locals()
+
+
 # End imports.
 _HELPER_import_devices(); devices = _HELPER_Module('devices') # import devices
 _HELPER_import_constants(); constants = _HELPER_Module('constants') # import constants
+import math
 _HELPER_import_util(); util = _HELPER_Module('util') # import util
 import time
 
@@ -428,7 +435,7 @@ keyboard = None
 actions = None
 
 def initialize():
-    global robot, drive_wheel_left, drive_wheel_right, base_arm_motor, keyboard
+    global robot, drive_wheel_left, drive_wheel_right, arm_base, keyboard, base_arm_motor
     # actions = Actions
     robot = Robot
     keyboard = Keyboard
@@ -454,12 +461,21 @@ def initialize():
 
     base_arm_motor = devices.Motor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "b").set_invert(True)
 
+    arm_base = devices.Arm(
+        devices.PidMotor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "b")
+        .set_invert(False)
+        .set_pid(0.08, 0, 0),
+        constants.ArmConstants.ARM_LENGTH,
+        constants.ArmConstants.ARM_MOTOR_TPR * constants.ArmConstants.ARM_MOTOR_RATIO * constants.ArmConstants.HUB_TO_ARM_GEAR_RATIO,
+        0
+    )
+
 # Structural Function
 def autonomous():
     initialize()
     print("Autonomous set up")
     while(True):
-        base_arm_motor.set_velocity(0.6)
+        base_arm_motor.set_velocity(0.65)
         # drive_wheel_left.set_velocity(0.2)
         # drive_wheel_right.set_velocity(0.2)
 
@@ -499,8 +515,12 @@ def two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right):
 def two_wheel_drive():
     drive = -Gamepad.get_value("joystick_left_y")
     turn = Gamepad.get_value("joystick_right_x")
-    left_drive_velocity = drive + turn
-    right_drive_velocity = drive - turn
+    left_drive_velocity = turn + drive
+    right_drive_velocity = turn - drive
+    # turn = -Gamepad.get_value("joystick_left_y")
+    # drive = Gamepad.get_value("joystick_right_x")
+    # left_drive_velocity = drive + turn
+    # right_drive_velocity = drive - turn
     velocity_limit = max(1.0, abs(left_drive_velocity), abs(right_drive_velocity))
     
     # We divide the drive velocity by the max velocity to normalize it. This ensures that the value is between
@@ -512,7 +532,7 @@ def arm_testing():
     move_up = Gamepad.get_value("button_y")
     move_down = Gamepad.get_value("button_a")
     if move_up:
-        base_arm_motor.set_velocity(0.65)
+        base_arm_motor.set_velocity(0.60)
         # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
     elif move_down:
         base_arm_motor.set_velocity(-0.25)
@@ -522,6 +542,16 @@ def arm_testing():
         base_arm_motor.reset_encoder()
         # slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
 
+def arm_pid_testing():
+    move_up = Gamepad.get_value("button_y")
+    move_down = Gamepad.get_value("button_a")
+    if move_up:
+        arm_base.set_velocity(0.40)
+        # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
+    elif move_down:
+        arm_base.set_velocity(-0.25)
+        # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
+        # slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
 
 # Structural Function
 def teleop():
@@ -536,7 +566,7 @@ def teleop():
         # turn_right = Keyboard.get_value("right_arrow")
         # two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right)
         two_wheel_drive()
-        arm_testing()
+        arm_pid_testing()
         
 
 # #For testing purposes

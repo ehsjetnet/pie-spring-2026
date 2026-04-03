@@ -1,4 +1,5 @@
 from typing import Final
+import util
 
 """
 Constants file containing information such as motor controller IDs,
@@ -19,3 +20,8 @@ class DriveConstants:
 
 class ArmConstants:
     ARM_CONTROLLER_ID: Final[str] = "6_10978819230753236066"
+    ARM_LENGTH: int = util.inches_to_meters(14)
+    ARM_MOTOR_TPR: int = 16
+    ARM_MOTOR_RATIO: int = 50
+    HUB_TO_ARM_GEAR_RATIO: int = 84/36
+
