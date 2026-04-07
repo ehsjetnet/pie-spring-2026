@@ -48,7 +48,7 @@ def initialize():
 
     arm_base = devices.Arm(
         devices.PidMotor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "b")
-        .set_invert(False)
+        .set_invert(True)
         .set_pid(0.08, 0, 0),
         constants.ArmConstants.ARM_LENGTH,
         constants.ArmConstants.ARM_MOTOR_TPR * constants.ArmConstants.ARM_MOTOR_RATIO * constants.ArmConstants.HUB_TO_ARM_GEAR_RATIO,
@@ -131,12 +131,14 @@ def arm_pid_testing():
     move_up = Gamepad.get_value("button_y")
     move_down = Gamepad.get_value("button_a")
     if move_up:
-        arm_base.set_velocity(0.40)
+        arm_base.set_velocity(0.25)
         # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
     elif move_down:
-        arm_base.set_velocity(-0.25)
+        arm_base.set_velocity(-0.06)
         # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
         # slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
+    else:
+        arm_base.set_velocity(0.05)
 
 # Structural Function
 def teleop():
