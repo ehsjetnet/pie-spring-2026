@@ -298,3 +298,8 @@ class Servo:
         self._robot.set_value(self._controller, "servo" + self._servo, position)
 
 
+# class LineFollower:
+#     """Wraps a line follower sensor"""
+#     def __init__(self, robot):
+#         self._robot = robot
+#     def 

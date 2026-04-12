@@ -30,18 +30,18 @@ def _HELPER_entry_point(func):
             exit(1)
     return wrapped
 def _HELPER_translate_line_no(line_no):
-    if line_no >= 416:
+    if line_no >= 427:
         skipped_lines = 0
         for entry_point_line_num in _HELPER_entry_point_line_nums:
-            if entry_point_line_num + 416 <= line_no:
+            if entry_point_line_num + 427 <= line_no:
                 skipped_lines += 1
             else:
                 break
-        return 'main', line_no - 416 - skipped_lines
-    elif line_no >= 402:
-        return 'util.py', line_no - 402
-    elif line_no >= 91:
-        return 'devices.py', line_no - 91
+        return 'main', line_no - 427 - skipped_lines
+    elif line_no >= 413:
+        return 'util.py', line_no - 413
+    elif line_no >= 97:
+        return 'devices.py', line_no - 97
     elif line_no >= 53:
         return 'constants.py', line_no - 53
 def _HELPER_import_constants():
@@ -73,9 +73,15 @@ def _HELPER_import_constants():
     class ArmConstants:
         ARM_CONTROLLER_ID: Final[str] = "6_10978819230753236066"
         ARM_LENGTH: int = util.inches_to_meters(14)
+        FOREARM_LENGTH: int = util.inches_to_meters(13.7)
         ARM_MOTOR_TPR: int = 16
         ARM_MOTOR_RATIO: int = 50
         HUB_TO_ARM_GEAR_RATIO: int = 84/36
+    
+    class CardReader:
+        CARD_CONTROLLER_ID: Final[str] = "6_446663227023814261"
+    
+    
     
 
     # End imported file.
@@ -388,6 +394,11 @@ def _HELPER_import_devices():
             self._robot.set_value(self._controller, "servo" + self._servo, position)
     
     
+    # class LineFollower:
+    #     """Wraps a line follower sensor"""
+    #     def __init__(self, robot):
+    #         self._robot = robot
+    #     def 
 
     # End imported file.
     _HELPER_module_export_dict['devices'] = locals()
@@ -435,7 +446,7 @@ keyboard = None
 actions = None
 
 def initialize():
-    global robot, drive_wheel_left, drive_wheel_right, arm_base, keyboard, base_arm_motor
+    global robot, drive_wheel_left, drive_wheel_right, arm_base, keyboard, forearm, card_reader
     # actions = Actions
     robot = Robot
     keyboard = Keyboard
@@ -459,8 +470,6 @@ def initialize():
         constants.DriveConstants.HUB_TO_WHEEL_GEAR_RATIO
     )
 
-    base_arm_motor = devices.Motor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "b").set_invert(True)
-
     arm_base = devices.Arm(
         devices.PidMotor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "b")
         .set_invert(True)
@@ -470,12 +479,26 @@ def initialize():
         0
     )
 
+    card_reader = devices.PidMotor(robot, constants.CardReader.CARD_CONTROLLER_ID, "a").set_pid(0.08, 0, 0).set_invert(True)
+
+    forearm = devices.Arm(
+        devices.PidMotor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "a")
+        .set_invert(True)
+        .set_pid(0.08, 0, 0),
+        constants.ArmConstants.FOREARM_LENGTH,
+        constants.ArmConstants.ARM_MOTOR_TPR * constants.ArmConstants.ARM_MOTOR_RATIO * constants.ArmConstants.HUB_TO_ARM_GEAR_RATIO,
+        0
+    )
+
 # Structural Function
 def autonomous():
     initialize()
     print("Autonomous set up")
-    while(True):
-        base_arm_motor.set_velocity(0.65)
+    tick_count = 0
+    while(tick_count <= 1000):
+        drive_wheel_left.set_velocity(0.45)
+        drive_wheel_right.set_velocity(0.45)
+        tick_count+=1
         # drive_wheel_left.set_velocity(0.2)
         # drive_wheel_right.set_velocity(0.2)
 
@@ -528,32 +551,39 @@ def two_wheel_drive():
     drive_wheel_left.set_velocity(left_drive_velocity/velocity_limit)
     drive_wheel_right.set_velocity(right_drive_velocity/velocity_limit)
 
-def arm_testing():
-    move_up = Gamepad.get_value("button_y")
-    move_down = Gamepad.get_value("button_a")
-    if move_up:
-        base_arm_motor.set_velocity(0.60)
-        # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
-    elif move_down:
-        base_arm_motor.set_velocity(-0.25)
-        # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
-    else:
-        base_arm_motor.set_velocity(0)
-        base_arm_motor.reset_encoder()
-        # slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
-
 def arm_pid_testing():
     move_up = Gamepad.get_value("button_y")
     move_down = Gamepad.get_value("button_a")
     if move_up:
-        arm_base.set_velocity(0.25)
+        arm_base.set_velocity(0.7)
         # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
     elif move_down:
-        arm_base.set_velocity(-0.06)
+        arm_base.set_velocity(-0.08)
         # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
         # slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
     else:
-        arm_base.set_velocity(0.05)
+        arm_base.set_velocity(0.15)
+
+def forearm_pid_testing():
+    move_up = Gamepad.get_value("dpad_up")
+    move_down = Gamepad.get_value("dpad_down")
+    if move_up:
+        forearm.set_velocity(0.5)
+    elif move_down:
+        forearm.set_velocity(-0.2)
+    else:
+        forearm.set_velocity(0)
+
+def card_reader_test():
+    extend = Gamepad.get_value("r_bumper")
+    retract = Gamepad.get_value("l_bumper")
+    if extend:
+        card_reader.set_velocity(0.3)
+    elif retract:
+        card_reader.set_velocity(-0.3)
+    else:
+        card_reader.set_velocity(0)
+
 
 # Structural Function
 def teleop():
@@ -569,6 +599,8 @@ def teleop():
         # two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right)
         two_wheel_drive()
         arm_pid_testing()
+        forearm_pid_testing()
+        card_reader_test()
         
 
 # #For testing purposes

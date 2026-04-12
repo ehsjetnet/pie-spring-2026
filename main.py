@@ -20,7 +20,7 @@ keyboard = None
 actions = None
 
 def initialize():
-    global robot, drive_wheel_left, drive_wheel_right, arm_base, keyboard, base_arm_motor
+    global robot, drive_wheel_left, drive_wheel_right, arm_base, keyboard, forearm, card_reader
     # actions = Actions
     robot = Robot
     keyboard = Keyboard
@@ -44,8 +44,6 @@ def initialize():
         constants.DriveConstants.HUB_TO_WHEEL_GEAR_RATIO
     )
 
-    base_arm_motor = devices.Motor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "b").set_invert(True)
-
     arm_base = devices.Arm(
         devices.PidMotor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "b")
         .set_invert(True)
@@ -55,12 +53,26 @@ def initialize():
         0
     )
 
+    card_reader = devices.PidMotor(robot, constants.CardReader.CARD_CONTROLLER_ID, "a").set_pid(0.08, 0, 0).set_invert(True)
+
+    forearm = devices.Arm(
+        devices.PidMotor(robot, constants.ArmConstants.ARM_CONTROLLER_ID, "a")
+        .set_invert(True)
+        .set_pid(0.08, 0, 0),
+        constants.ArmConstants.FOREARM_LENGTH,
+        constants.ArmConstants.ARM_MOTOR_TPR * constants.ArmConstants.ARM_MOTOR_RATIO * constants.ArmConstants.HUB_TO_ARM_GEAR_RATIO,
+        0
+    )
+
 # Structural Function
 def autonomous():
     initialize()
     print("Autonomous set up")
-    while(True):
-        base_arm_motor.set_velocity(0.65)
+    tick_count = 0
+    while(tick_count <= 1000):
+        drive_wheel_left.set_velocity(0.45)
+        drive_wheel_right.set_velocity(0.45)
+        tick_count+=1
         # drive_wheel_left.set_velocity(0.2)
         # drive_wheel_right.set_velocity(0.2)
 
@@ -113,32 +125,39 @@ def two_wheel_drive():
     drive_wheel_left.set_velocity(left_drive_velocity/velocity_limit)
     drive_wheel_right.set_velocity(right_drive_velocity/velocity_limit)
 
-def arm_testing():
-    move_up = Gamepad.get_value("button_y")
-    move_down = Gamepad.get_value("button_a")
-    if move_up:
-        base_arm_motor.set_velocity(0.60)
-        # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
-    elif move_down:
-        base_arm_motor.set_velocity(-0.25)
-        # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
-    else:
-        base_arm_motor.set_velocity(0)
-        base_arm_motor.reset_encoder()
-        # slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
-
 def arm_pid_testing():
     move_up = Gamepad.get_value("button_y")
     move_down = Gamepad.get_value("button_a")
     if move_up:
-        arm_base.set_velocity(0.25)
+        arm_base.set_velocity(0.7)
         # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
     elif move_down:
-        arm_base.set_velocity(-0.06)
+        arm_base.set_velocity(-0.08)
         # slowprint("Arm encoder reading: " + base_arm_motor.get_encoder())
         # slowprint("Arm encoder reading " + base_arm_motor.get_encoder())
     else:
-        arm_base.set_velocity(0.05)
+        arm_base.set_velocity(0.15)
+
+def forearm_pid_testing():
+    move_up = Gamepad.get_value("dpad_up")
+    move_down = Gamepad.get_value("dpad_down")
+    if move_up:
+        forearm.set_velocity(0.5)
+    elif move_down:
+        forearm.set_velocity(-0.2)
+    else:
+        forearm.set_velocity(0)
+
+def card_reader_test():
+    extend = Gamepad.get_value("r_bumper")
+    retract = Gamepad.get_value("l_bumper")
+    if extend:
+        card_reader.set_velocity(0.3)
+    elif retract:
+        card_reader.set_velocity(-0.3)
+    else:
+        card_reader.set_velocity(0)
+
 
 # Structural Function
 def teleop():
@@ -154,6 +173,8 @@ def teleop():
         # two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right)
         two_wheel_drive()
         arm_pid_testing()
+        forearm_pid_testing()
+        card_reader_test()
         
 
 # #For testing purposes
