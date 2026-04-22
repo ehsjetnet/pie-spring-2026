@@ -20,11 +20,11 @@ keyboard = None
 actions = None
 
 def initialize():
-    global robot, drive_wheel_left, drive_wheel_right, arm_base, keyboard, forearm, card_reader
+    global robot, drive_wheel_left, drive_wheel_right, arm_base, keyboard, forearm, card_reader #, line_follower
     # actions = Actions
     robot = Robot
     keyboard = Keyboard
-    drive_wheel_right = devices.Wheel(   
+    drive_wheel_right = devices.Wheel(
         devices.Motor(robot, constants.DriveConstants.DRIVE_CONTROLLER_ID, "a")
         .set_invert(True)
         .set_pid(None,None,None),
@@ -64,17 +64,37 @@ def initialize():
         0
     )
 
+    # line_follower = devices.LineFollower(robot, constants.LineFollower.LINE_FOLLOWER_ID)
+
 # Structural Function
 def autonomous():
     initialize()
     print("Autonomous set up")
-    tick_count = 0
-    while(tick_count <= 1000):
-        drive_wheel_left.set_velocity(0.45)
-        drive_wheel_right.set_velocity(0.45)
-        tick_count+=1
-        # drive_wheel_left.set_velocity(0.2)
-        # drive_wheel_right.set_velocity(0.2)
+    # tick_count = 0
+    print("Autonomous running")
+    # while True:
+    #     # Wobble to stay on the line
+    #     if line_follower.get_left() <= constants.LineFollower.LEFT_REFLECTIVE_THRESHOLD:
+    #         drive_wheel_left.set_velocity(0.8)
+    #         drive_wheel_right.set_velocity(0.6)
+    #     elif line_follower.get_right() <= constants.LineFollower.RIGHT_REFLECTIVE_THRESHOLD:
+    #         drive_wheel_left.set_velocity(0.6)
+    #         drive_wheel_right.set_velocity(0.8)
+    #     # If off the line, rotate the opposite direction to correct itself
+    #     elif line_follower.get_left() > constants.LineFollower.LEFT_REFLECTIVE_THRESHOLD:
+    #         drive_wheel_left.set_velocity(0)
+    #         drive_wheel_right.set_velocity(0.85)
+    #     elif line_follower.get_right() > constants.LineFollower.RIGHT_REFLECTIVE_THRESHOLD:
+    #         drive_wheel_left.set_velocity(0.85)
+    #         drive_wheel_right.set_velocity(0)
+
+
+    # while(tick_count <= 1000):
+    #     # drive_wheel_left.set_velocity(0.45)
+    #     # drive_wheel_right.set_velocity(0.45)
+    #     tick_count+=1
+    #     # drive_wheel_left.set_velocity(0.2)
+    #     # drive_wheel_right.set_velocity(0.2)
 
 
 def two_wheel_drive_keyboard(drive_fwd, drive_back, turn_left, turn_right):

@@ -29,5 +29,11 @@ class ArmConstants:
 class CardReader:
     CARD_CONTROLLER_ID: Final[str] = "6_446663227023814261"
 
+# class LineFollower:
+#     LINE_FOLLOWER_ID: Final[str] = "placeholder"
+#     # All of the values below are placeholders, change them based on testing results
+#     LEFT_REFLECTIVE_THRESHOLD: Final[float] = "0.85"
+#     RIGHT_REFLECTIVE_THRESHOLD: Final[float] = "0.85"
+
 
 

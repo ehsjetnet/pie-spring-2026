@@ -300,6 +300,12 @@ class Servo:
 
 # class LineFollower:
 #     """Wraps a line follower sensor"""
-#     def __init__(self, robot):
+#     def __init__(self, robot, controller):
 #         self._robot = robot
-#     def 
+#         self._controller = controller
+#     def read_left(self):
+#         return self._robot.get_value(self._controller, "left")
+#     def read_center(self):
+#         return self._robot.get_value(self._controller, "center")
+#     def read_right(self):
+#         return self._robot.get_value(self._controller, "right")
